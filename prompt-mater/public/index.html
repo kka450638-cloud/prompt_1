@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROMPT//MASTER v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #020408;
+  --surface: #080f1a;
+  --surface2: #0d1829;
+  --border: #0f2a4a;
+  --neon: #00f5ff;
+  --neon2: #ff00aa;
+  --neon3: #00ff88;
+  --neon4: #ffaa00;
+  --text: #cce8ff;
+  --text-dim: #4a7a9b;
+  --text-muted: #1a3a5c;
+  --glow: rgba(0,245,255,0.2);
+  --glow2: rgba(255,0,170,0.2);
+  --nav-bg: rgba(2,4,8,0.92);
+  --code-bg: #020810;
+  --code-text: #7dc8e8;
+  --input-bg: #020810;
+}
+
+/* LIGHT MODE */
+body.light {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface2: #eef2f8;
+  --border: #d0daea;
+  --neon: #0066cc;
+  --neon2: #cc0077;
+  --neon3: #007744;
+  --neon4: #996600;
+  --text: #1a2640;
+  --text-dim: #5a7090;
+  --text-muted: #b0c0d4;
+  --glow: rgba(0,102,204,0.15);
+  --glow2: rgba(204,0,119,0.12);
+  --nav-bg: rgba(245,247,250,0.95);
+  --code-bg: #f0f4fa;
+  --code-text: #2a5080;
+  --input-bg: #f8fafc;
+}
+body.light::before { display: none; }
+body.light::after {
+  background-image:
+    linear-gradient(rgba(0,102,204,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,102,204,0.04) 1px, transparent 1px);
+}
+body.light #particles { opacity: 0.15; }
+body.light .logo {
+  text-shadow: none;
+  animation: none;
+}
+body.light .sh h2 { text-shadow: none; }
+body.light .panel::before { background: linear-gradient(90deg,transparent,var(--neon),transparent); opacity:0.3; }
+body.light .cb { background: var(--code-bg); color: var(--code-text); border-color: rgba(0,102,204,0.15); }
+body.light .output-area { background: var(--input-bg); }
+body.light .qa-textarea, body.light .battle-textarea,
+body.light .form-g select, body.light .form-g input, body.light .form-g textarea,
+body.light .builder-output { background: var(--input-bg); color: var(--text); border-color: var(--border); }
+body.light .stat-box { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+body.light .card { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+body.light .card:hover { box-shadow: 0 4px 20px rgba(0,102,204,0.12); }
+body.light .quiz-opt { background: var(--surface2); }
+body.light .quiz-opt:hover:not(:disabled) { background: rgba(0,102,204,0.07); }
+body.light ::-webkit-scrollbar-track { background: var(--surface2); }
+body.light .ring-bg { stroke: var(--border); }
+body.light .dropped-block { background: var(--surface); border-color: rgba(0,102,204,0.2); }
+body.light .dropped-block textarea { color: var(--text); }
+
+/* THEME TOGGLE */
+.theme-toggle {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 52px;
+  height: 26px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+}
+.theme-toggle .tog-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--neon);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transform: translateX(0);
+  box-shadow: 0 0 8px var(--glow);
+}
+body.light .theme-toggle .tog-knob {
+  transform: translateX(26px);
+  background: var(--neon4);
+  box-shadow: 0 2px 8px rgba(153,102,0,0.3);
+}
+body.light .theme-toggle { border-color: var(--border); }
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* SCANLINE EFFECT */
+body{
+  font-family:'Noto Sans KR',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  cursor:crosshair;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.015) 2px,rgba(0,245,255,0.015) 4px);
+  pointer-events:none;z-index:9999;
+}
+/* grid */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;z-index:0;
+}
+
+/* CANVAS PARTICLES */
+#particles{position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:500;
+  background:var(--nav-bg);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,245,255,0.15);
+  padding:0 16px;height:56px;
+  display:flex;align-items:center;gap:8px;
+}
+.logo{
+  font-family:'Orbitron',monospace;font-size:16px;font-weight:900;
+  color:var(--neon);letter-spacing:2px;flex-shrink:0;
+  text-shadow:0 0 20px var(--neon),0 0 40px rgba(0,245,255,0.5);
+  animation:glitch 4s infinite;
+}
+@keyframes glitch{
+  0%,92%,100%{text-shadow:0 0 20px var(--neon),0 0 40px rgba(0,245,255,0.5);}
+  93%{text-shadow:-2px 0 var(--neon2),2px 0 var(--neon),0 0 40px rgba(0,245,255,0.5);}
+  95%{text-shadow:2px 0 var(--neon2),-2px 0 var(--neon),0 0 40px rgba(0,245,255,0.5);}
+}
+.logo span{color:var(--neon2);text-shadow:0 0 20px var(--neon2);}
+
+.nav-links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;padding-left:8px;}
+.nav-links::-webkit-scrollbar{display:none;}
+.nav-btn{
+  background:none;border:1px solid transparent;
+  color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:5px 12px;border-radius:3px;cursor:crosshair;white-space:nowrap;
+  transition:all 0.2s;text-transform:uppercase;letter-spacing:1px;
+}
+.nav-btn:hover,.nav-btn.active{
+  color:var(--neon);border-color:rgba(0,245,255,0.4);
+  background:rgba(0,245,255,0.05);text-shadow:0 0 8px var(--neon);
+}
+
+/* CONTAINER */
+.container{position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:28px 16px 100px;}
+
+/* SECTIONS */
+.section{display:none;animation:fadeUp 0.35s ease;}
+.section.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* HERO */
+.hero{text-align:center;padding:48px 20px 32px;position:relative;}
+.hero h1{
+  font-family:'Orbitron',monospace;font-size:clamp(24px,5vw,54px);
+  font-weight:900;line-height:1;letter-spacing:4px;
+  color:var(--neon);text-shadow:0 0 30px var(--neon),0 0 60px rgba(0,245,255,0.4);
+  margin-bottom:8px;
+}
+.hero h1 span{color:var(--neon2);text-shadow:0 0 30px var(--neon2);}
+.hero .ver{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);letter-spacing:4px;margin-bottom:20px;}
+.hero p{color:var(--text-dim);font-size:14px;max-width:480px;margin:0 auto 28px;line-height:1.8;}
+
+.hero-stat-row{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:28px;}
+.stat-box{
+  background:var(--surface);border:1px solid rgba(0,245,255,0.15);border-radius:4px;
+  padding:10px 20px;text-align:center;min-width:80px;
+}
+.stat-n{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--neon);}
+.stat-l{font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+.quick-btns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.qbtn{
+  background:transparent;border:1px solid rgba(0,245,255,0.3);
+  color:var(--neon);font-family:'JetBrains Mono',monospace;font-size:12px;
+  padding:8px 18px;border-radius:3px;cursor:crosshair;
+  transition:all 0.25s;text-transform:uppercase;letter-spacing:1px;
+}
+.qbtn:hover{background:rgba(0,245,255,0.1);box-shadow:0 0 16px var(--glow);transform:translateY(-2px);}
+.qbtn.pink{border-color:rgba(255,0,170,0.4);color:var(--neon2);}
+.qbtn.pink:hover{background:rgba(255,0,170,0.1);box-shadow:0 0 16px var(--glow2);}
+.qbtn.green{border-color:rgba(0,255,136,0.4);color:var(--neon3);}
+.qbtn.green:hover{background:rgba(0,255,136,0.1);box-shadow:0 0 16px rgba(0,255,136,0.2);}
+
+/* PANEL */
+.panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:4px;
+  padding:20px;margin-bottom:16px;position:relative;overflow:hidden;
+}
+.panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--neon),transparent);
+  opacity:0.5;
+}
+.panel-title{
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  color:var(--neon);letter-spacing:2px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{content:'>';color:var(--neon2);font-size:16px;}
+
+/* CARD GRID */
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:16px;}
+.card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+  padding:16px;transition:all 0.25s;cursor:crosshair;
+}
+.card:hover{border-color:rgba(0,245,255,0.5);box-shadow:0 0 24px var(--glow);transform:translateY(-2px);}
+.card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.card-sub{font-size:11px;color:var(--text-dim);margin-bottom:10px;letter-spacing:0.5px;}
+.card-body{font-size:12px;color:var(--text-dim);line-height:1.7;}
+
+/* CODE */
+.cb{
+  background:#020810;border:1px solid rgba(0,245,255,0.12);border-radius:3px;
+  padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:#7dc8e8;line-height:1.8;margin-top:10px;overflow-x:auto;
+  white-space:pre-wrap;word-break:break-word;position:relative;
+}
+.cb .kw{color:var(--neon);}
+.cb .str{color:var(--neon3);}
+.cb .cmt{color:var(--text-muted);}
+.cb .hl{color:var(--neon2);}
+.cb .warn{color:var(--neon4);}
+
+/* TAG */
+.tag{
+  display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;
+  padding:2px 8px;border-radius:2px;background:rgba(0,245,255,0.08);
+  color:var(--neon);border:1px solid rgba(0,245,255,0.2);margin:2px;
+}
+.tag.p{background:rgba(255,0,170,0.08);color:var(--neon2);border-color:rgba(255,0,170,0.2);}
+.tag.g{background:rgba(0,255,136,0.08);color:var(--neon3);border-color:rgba(0,255,136,0.2);}
+.tag.y{background:rgba(255,170,0,0.08);color:var(--neon4);border-color:rgba(255,170,0,0.2);}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:24px 0;position:relative;}
+.div::after{content:'//';position:absolute;left:50%;top:-8px;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);background:var(--bg);padding:0 8px;}
+
+/* SECTION HEADING */
+.sh{margin-bottom:6px;}
+.sh h2{font-family:'Orbitron',monospace;font-size:18px;color:var(--neon);letter-spacing:2px;text-shadow:0 0 20px var(--glow);}
+.sh p{font-size:13px;color:var(--text-dim);margin-top:4px;line-height:1.7;}
+
+/* EXPAND */
+.fe{background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.fe-h{
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+  cursor:crosshair;transition:background 0.2s;gap:12px;
+}
+.fe-h:hover{background:rgba(0,245,255,0.04);}
+.fe-ht{font-size:13px;font-weight:700;color:var(--text);}
+.fe-arr{color:var(--text-muted);font-size:10px;transition:transform 0.2s;font-family:'JetBrains Mono',monospace;}
+.fe-b{padding:0 16px;max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.3s;}
+.fe-b.open{max-height:1000px;padding:0 16px 16px;}
+.fe-h.open .fe-arr{transform:rotate(180deg);color:var(--neon);}
+
+/* ======= QUIZ GAME ======= */
+.quiz-screen{min-height:400px;}
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.quiz-score{font-family:'Orbitron',monospace;font-size:14px;color:var(--neon);text-shadow:0 0 10px var(--glow);}
+.quiz-life{font-size:18px;letter-spacing:2px;}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--neon),var(--neon2));transition:width 0.5s ease;border-radius:2px;box-shadow:0 0 8px var(--neon);}
+.quiz-q{
+  font-size:16px;font-weight:700;line-height:1.6;margin-bottom:20px;
+  color:var(--text);padding:16px;background:var(--surface2);
+  border:1px solid rgba(0,245,255,0.15);border-radius:4px;
+  border-left:3px solid var(--neon);
+}
+.quiz-hint{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-top:8px;}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+@media(max-width:560px){.quiz-opts{grid-template-columns:1fr;}}
+.quiz-opt{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  padding:12px 16px;border-radius:3px;cursor:crosshair;
+  text-align:left;transition:all 0.2s;line-height:1.5;
+}
+.quiz-opt:hover:not(:disabled){border-color:rgba(0,245,255,0.5);background:rgba(0,245,255,0.06);color:var(--neon);}
+.quiz-opt.correct{border-color:var(--neon3);background:rgba(0,255,136,0.12);color:var(--neon3);animation:correctPulse 0.5s ease;}
+.quiz-opt.wrong{border-color:var(--neon2);background:rgba(255,0,170,0.08);color:var(--neon2);}
+@keyframes correctPulse{0%{transform:scale(1);}50%{transform:scale(1.02);}100%{transform:scale(1);}}
+.quiz-feedback{
+  padding:12px 16px;border-radius:3px;font-size:13px;line-height:1.7;
+  margin-bottom:16px;display:none;
+}
+.quiz-feedback.show{display:block;}
+.quiz-feedback.ok{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);color:var(--neon3);}
+.quiz-feedback.fail{background:rgba(255,0,170,0.08);border:1px solid rgba(255,0,170,0.3);color:var(--neon2);}
+.quiz-next-btn{
+  background:transparent;border:1px solid var(--neon);color:var(--neon);
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  padding:10px 24px;border-radius:3px;cursor:crosshair;
+  transition:all 0.2s;letter-spacing:1px;display:none;
+}
+.quiz-next-btn.show{display:inline-block;}
+.quiz-next-btn:hover{background:rgba(0,245,255,0.1);box-shadow:0 0 16px var(--glow);}
+.quiz-result{text-align:center;padding:40px 20px;}
+.quiz-result h2{font-family:'Orbitron',monospace;font-size:28px;color:var(--neon);text-shadow:0 0 20px var(--glow);margin-bottom:16px;}
+.quiz-result .final-score{font-family:'Orbitron',monospace;font-size:48px;font-weight:900;margin:20px 0;}
+.rank-badge{display:inline-block;padding:8px 24px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:2px;margin-bottom:24px;}
+
+/* ======= QUALITY ANALYZER ======= */
+.qa-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.qa-layout{grid-template-columns:1fr;}}
+.qa-textarea{
+  width:100%;background:#020810;border:1px solid var(--border);
+  color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  padding:14px;border-radius:3px;outline:none;resize:vertical;min-height:200px;
+  line-height:1.8;transition:border-color 0.2s;
+}
+.qa-textarea:focus{border-color:rgba(0,245,255,0.4);}
+.score-ring{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:16px auto;position:relative;width:120px;height:120px;
+}
+.ring-svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:8;}
+.ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s ease,stroke 0.5s;}
+.ring-text{position:absolute;text-align:center;}
+.ring-num{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;}
+.ring-label{font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+.criteria-list{margin-top:12px;}
+.crit-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.crit-name{font-size:12px;color:var(--text-dim);width:80px;flex-shrink:0;}
+.crit-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.crit-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.crit-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);width:28px;text-align:right;flex-shrink:0;}
+.suggestion-list{margin-top:12px;}
+.sug-item{
+  padding:8px 12px;border-radius:3px;font-size:12px;margin-bottom:6px;
+  border-left:2px solid;line-height:1.6;
+}
+.sug-high{border-color:var(--neon2);background:rgba(255,0,170,0.05);color:var(--text);}
+.sug-mid{border-color:var(--neon4);background:rgba(255,170,0,0.05);color:var(--text);}
+.sug-low{border-color:var(--neon3);background:rgba(0,255,136,0.05);color:var(--text);}
+
+/* ======= BUILDER ======= */
+.builder-layout{display:grid;grid-template-columns:240px 1fr;gap:16px;min-height:500px;}
+@media(max-width:700px){.builder-layout{grid-template-columns:1fr;}}
+.builder-blocks{
+  background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:12px;
+}
+.builder-blocks h3{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;}
+.block-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:3px;
+  padding:8px 12px;margin-bottom:6px;cursor:grab;font-size:12px;
+  color:var(--text);transition:all 0.2s;user-select:none;
+  display:flex;align-items:center;gap:8px;
+}
+.block-item:hover{border-color:rgba(0,245,255,0.4);color:var(--neon);}
+.block-item:active{cursor:grabbing;}
+.block-icon{font-size:14px;flex-shrink:0;}
+.builder-canvas{
+  background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+  padding:16px;position:relative;min-height:400px;
+}
+.canvas-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:200px;color:var(--text-muted);font-size:12px;font-family:'JetBrains Mono',monospace;
+  border:1px dashed var(--border);border-radius:3px;margin-bottom:12px;
+  text-align:center;gap:8px;
+}
+.dropped-block{
+  background:var(--surface);border:1px solid rgba(0,245,255,0.2);border-radius:3px;
+  padding:10px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;
+  position:relative;animation:dropIn 0.25s ease;
+}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.dropped-block textarea{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;font-size:12px;outline:none;
+  resize:none;line-height:1.7;min-height:48px;
+}
+.dropped-block .block-label{font-size:10px;color:var(--neon);font-family:'JetBrains Mono',monospace;flex-shrink:0;width:60px;letter-spacing:1px;padding-top:2px;}
+.del-block{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 4px;flex-shrink:0;transition:color 0.2s;}
+.del-block:hover{color:var(--neon2);}
+.builder-output{
+  background:#020810;border:1px solid var(--border);border-radius:3px;
+  padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:#7dc8e8;line-height:1.8;min-height:100px;white-space:pre-wrap;
+  margin-top:12px;word-break:break-word;
+}
+.builder-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.bb{
+  background:transparent;border:1px solid;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:7px 16px;border-radius:3px;cursor:crosshair;
+  transition:all 0.2s;letter-spacing:1px;text-transform:uppercase;
+}
+.bb.c{border-color:var(--neon);color:var(--neon);}
+.bb.c:hover{background:rgba(0,245,255,0.1);}
+.bb.p{border-color:var(--neon2);color:var(--neon2);}
+.bb.p:hover{background:rgba(255,0,170,0.1);}
+.bb.g{border-color:var(--neon3);color:var(--neon3);}
+.bb.g:hover{background:rgba(0,255,136,0.1);}
+
+/* ======= BATTLE ======= */
+.battle-layout{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;}
+@media(max-width:700px){.battle-layout{grid-template-columns:1fr;}}
+.battle-vs{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:20px 0;
+}
+.vs-text{
+  font-family:'Orbitron',monospace;font-size:20px;font-weight:900;
+  color:var(--neon2);text-shadow:0 0 20px var(--neon2);
+  animation:vsPulse 2s infinite;
+}
+@keyframes vsPulse{0%,100%{opacity:1;}50%{opacity:0.6;}}
+.battle-panel{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:14px;}
+.battle-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
+.battle-label.a{color:var(--neon);}
+.battle-label.b{color:var(--neon2);}
+.battle-textarea{
+  width:100%;background:#020810;border:1px solid var(--border);
+  color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:12px;
+  padding:10px;border-radius:3px;outline:none;resize:vertical;min-height:120px;
+  line-height:1.7;transition:border-color 0.2s;
+}
+.battle-textarea:focus{border-color:rgba(0,245,255,0.3);}
+.battle-btn{
+  width:100%;background:transparent;
+  border:1px solid var(--neon2);color:var(--neon2);
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  padding:10px;border-radius:3px;cursor:crosshair;
+  transition:all 0.2s;letter-spacing:1px;text-transform:uppercase;margin-top:10px;
+}
+.battle-btn:hover{background:rgba(255,0,170,0.1);box-shadow:0 0 20px var(--glow2);}
+.battle-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.battle-result{
+  margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+.battle-res-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px;
+  font-size:12px;line-height:1.7;color:var(--text-dim);position:relative;
+  transition:all 0.5s;
+}
+.battle-res-card.winner{
+  border-color:var(--neon4);
+  box-shadow:0 0 20px rgba(255,170,0,0.2);
+}
+.winner-badge{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:var(--neon4);color:#000;font-family:'JetBrains Mono',monospace;
+  font-size:10px;padding:2px 10px;border-radius:10px;letter-spacing:1px;font-weight:700;
+}
+.battle-meter{height:6px;border-radius:3px;background:var(--border);margin:6px 0;overflow:hidden;}
+.meter-fill{height:100%;border-radius:3px;transition:width 1.2s ease;}
+
+/* ======= GENERATOR ======= */
+.gen-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.gen-layout{grid-template-columns:1fr;}}
+.form-g{margin-bottom:12px;}
+.form-g label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;}
+.form-g select,.form-g input,.form-g textarea{
+  width:100%;background:#020810;border:1px solid var(--border);
+  color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  padding:9px 12px;border-radius:3px;outline:none;transition:border-color 0.2s;resize:vertical;
+}
+.form-g select:focus,.form-g input:focus,.form-g textarea:focus{border-color:rgba(0,245,255,0.4);}
+.form-g select option{background:var(--surface);}
+.chip-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.chip{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text-dim);font-size:11px;padding:4px 10px;border-radius:2px;
+  cursor:crosshair;transition:all 0.15s;white-space:nowrap;font-family:'JetBrains Mono',monospace;
+}
+.chip:hover{border-color:rgba(0,245,255,0.4);color:var(--neon);}
+.chip.selected{border-color:var(--neon);color:var(--neon);background:rgba(0,245,255,0.08);}
+.gen-btn{
+  width:100%;background:transparent;border:1px solid var(--neon);color:var(--neon);
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  padding:12px;border-radius:3px;cursor:crosshair;transition:all 0.25s;
+  letter-spacing:2px;text-transform:uppercase;margin-top:4px;
+}
+.gen-btn:hover{background:rgba(0,245,255,0.08);box-shadow:0 0 24px var(--glow);}
+.gen-btn:disabled{opacity:0.3;cursor:not-allowed;box-shadow:none;}
+.output-area{
+  background:#020810;border:1px solid var(--border);border-radius:3px;
+  padding:14px;font-size:13px;line-height:1.8;color:var(--text);
+  white-space:pre-wrap;word-break:break-word;min-height:280px;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.output-ph{color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;padding-top:80px;line-height:2;}
+.loading-line{
+  display:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon);
+  text-align:center;padding:30px;letter-spacing:2px;
+}
+.loading-line.v{display:block;}
+.loading-line::after{content:'';animation:blink 0.7s infinite;display:inline-block;width:8px;height:12px;background:var(--neon);margin-left:4px;vertical-align:middle;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.copy-btn{
+  background:transparent;border:1px solid rgba(0,245,255,0.3);color:var(--text-dim);
+  font-size:11px;padding:6px 14px;border-radius:3px;cursor:crosshair;
+  font-family:'JetBrains Mono',monospace;transition:all 0.2s;float:right;margin-top:8px;
+}
+.copy-btn:hover{border-color:var(--neon3);color:var(--neon3);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,245,255,0.3);}
+
+/* MOBILE NAV */
+@media(max-width:480px){
+  .nav-btn{font-size:9px;padding:4px 8px;}
+  .cg{grid-template-columns:1fr;}
+}
+
+/* TYPEWRITER */
+.typewriter{overflow:hidden;white-space:nowrap;border-right:2px solid var(--neon);animation:type 2s steps(30) forwards,blink-caret 0.7s step-end infinite;}
+@keyframes type{from{width:0}to{width:100%}}
+@keyframes blink-caret{from,to{border-color:transparent}50%{border-color:var(--neon)}}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<nav>
+  <div class="logo">PROMPT<span>//</span>MASTER</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showSec('home')">홈</button>
+    <button class="nav-btn" onclick="showSec('ref')">레퍼런스</button>
+    <button class="nav-btn" onclick="showSec('quiz')">🎮 퀴즈</button>
+    <button class="nav-btn" onclick="showSec('analyzer')">🔥 품질분석</button>
+    <button class="nav-btn" onclick="showSec('builder')">🧩 빌더</button>
+    <button class="nav-btn" onclick="showSec('battle')">⚔️ 배틀</button>
+    <button class="nav-btn" onclick="showSec('gen')">🤖 생성기</button>
+  </div>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="라이트/다크 모드 전환">
+    <div class="tog-knob" id="togKnob">🌙</div>
+  </button>
+</nav>
+
+<div class="container">
+
+<div id="sec-home" class="section active">
+  <div class="hero">
+    <div class="ver">// SYSTEM ONLINE · v2.0 //</div>
+    <h1>PROMPT<br><span>MASTER</span></h1>
+    <p>프롬프트 엔지니어링 마스터 시스템 — 퀴즈·분석·빌더·배틀·AI생성기</p>
+    <div class="hero-stat-row">
+      <div class="stat-box"><div class="stat-n" style="color:var(--neon)">11</div><div class="stat-l">패턴</div></div>
+      <div class="stat-box"><div class="stat-n" style="color:var(--neon2)">6</div><div class="stat-l">프레임워크</div></div>
+      <div class="stat-box"><div class="stat-n" style="color:var(--neon3)">20+</div><div class="stat-l">예시</div></div>
+      <div class="stat-box"><div class="stat-n" style="color:var(--neon4)">5</div><div class="stat-l">기능</div></div>
+    </div>
+    <div class="quick-btns">
+      <button class="qbtn" onclick="showSec('quiz')">🎮 퀴즈 시작</button>
+      <button class="qbtn pink" onclick="showSec('battle')">⚔️ 배틀</button>
+      <button class="qbtn green" onclick="showSec('builder')">🧩 빌더</button>
+      <button class="qbtn" onclick="showSec('analyzer')" style="border-color:rgba(255,170,0,0.4);color:var(--neon4);">🔥 분석기</button>
+    </div>
+  </div>
+
+  <div class="cg">
+    <div class="card" onclick="showSec('ref')">
+      <div class="card-title">📚 레퍼런스</div>
+      <div class="card-sub">// 패턴·프레임워크·예시 정리</div>
+      <div class="card-body">수업 내용을 구조적으로 정리한 인터랙티브 레퍼런스</div>
+    </div>
+    <div class="card" onclick="showSec('quiz')">
+      <div class="card-title">🎮 퀴즈 게임</div>
+      <div class="card-sub">// 배운 내용 테스트</div>
+      <div class="card-body">퀴즈로 프롬프트 패턴 지식을 점검하고 랭크를 올리세요</div>
+    </div>
+    <div class="card" onclick="showSec('analyzer')">
+      <div class="card-title">🔥 품질 분석기</div>
+      <div class="card-sub">// 내 프롬프트 채점</div>
+      <div class="card-body">5개 기준으로 프롬프트를 자동 분석하고 개선 방향 제시</div>
+    </div>
+    <div class="card" onclick="showSec('builder')">
+      <div class="card-title">🧩 프롬프트 빌더</div>
+      <div class="card-sub">// 드래그&드롭 조립</div>
+      <div class="card-body">블록을 클릭해 쌓으면 구조화된 프롬프트가 완성됩니다</div>
+    </div>
+    <div class="card" onclick="showSec('battle')">
+      <div class="card-title">⚔️ 프롬프트 배틀</div>
+      <div class="card-sub">// 두 프롬프트 대결</div>
+      <div class="card-body">두 프롬프트를 AI가 비교 분석해 승자를 가립니다</div>
+    </div>
+    <div class="card" onclick="showSec('gen')">
+      <div class="card-title">🤖 AI 생성기</div>
+      <div class="card-sub">// OpenAI 연동</div>
+      <div class="card-body">패턴과 목표를 입력하면 AI가 맞춤 프롬프트를 생성합니다</div>
+    </div>
+  </div>
+</div>
+
+<div id="sec-ref" class="section">
+  <div class="sh"><h2>// REFERENCE</h2><p>수업에서 배운 프롬프트 패턴과 프레임워크 레퍼런스</p></div>
+  
+  <div class="panel">
+    <div class="panel-title">프롬프트 3가지 유형</div>
+    <div class="cg">
+      <div class="card">
+        <div class="card-title">📖 서술형</div>
+        <div class="tag">맥락 중심</div><div class="tag g">유연성 높음</div><div class="tag p">재사용 낮음</div>
+        <div class="cb"><span class="kw">당신은</span> 10년 경력의 무역 전문가입니다.
+<span class="cmt">→ 맥락과 배경으로 상황 이해 유도</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 지침형</div>
+        <div class="tag">규칙 중심</div><div class="tag y">유연성 중간</div>
+        <div class="cb"><span class="str">1.</span> 함수명은 snake_case
+<span class="str">2.</span> docstring 포함
+<span class="str">3.</span> 예외처리 필수
+<span class="str">4.</span> json 반환</div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚙️ 함수형 구조</div>
+        <div class="tag">구조 중심</div><div class="tag p">유연성 낮음</div><div class="tag g">재사용 높음</div>
+        <div class="cb"><span class="kw">입력</span>: {product}, {hs_code}, {country}
+<span class="kw">출력</span>: {"관세율","규제사항","필요서류"}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">샷 프롬프팅</div>
+    <div class="cg">
+      <div class="card"><div class="card-title">0️⃣ 제로샷</div><div class="card-body">예시 없이 바로 지시 → AI가 스스로 추론</div></div>
+      <div class="card"><div class="card-title">1️⃣ 원샷</div><div class="card-body">예시 1개 제공 → 패턴 힌트 부여</div></div>
+      <div class="card"><div class="card-title">🔢 퓨샷</div><div class="card-body">예시 2개 이상 → 일관된 패턴 학습</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">주요 패턴 & 프레임워크</div>
+    <div class="fe"><div class="fe-h" onclick="tFE(this)"><div><span class="fe-ht">🎭 페르소나 패턴</span> <span class="tag">단일</span><span class="tag">멀티</span></div><div class="fe-arr">▼</div></div>
+    <div class="fe-b">
+      <div class="cb"><span class="kw">당신은</span> 20년 경력의 관세사입니다.
+<span class="str">FTA 협정세율 전문가</span>로 쉽고 실용적으로 설명합니다.</div>
+    </div></div>
+
+    <div class="fe"><div class="fe-h" onclick="tFE(this)"><div><span class="fe-ht">🔑 대안 접근법 패턴</span> <span class="tag">4가지 유형</span></div><div class="fe-arr">▼</div></div>
+    <div class="fe-b"><div class="cb">모든 방법을 나열하고 <span class="hl">각각의 장단점</span>을 비교해줘
+→ 선택권이 사람에게 돌아옴</div></div></div>
+
+    <div class="fe"><div class="fe-h" onclick="tFE(this)"><div><span class="fe-ht">🪞 리플렉션 패턴</span> <span class="tag">초안→비평→개선</span></div><div class="fe-arr">▼</div></div>
+    <div class="fe-b"><div class="cb"><span class="str">[초안]</span> → <span class="hl">[자기비평]</span> → <span class="kw">[개선본]</span>
+AI가 스스로 약점 분석 후 개선</div></div></div>
+
+    <div class="fe"><div class="fe-h" onclick="tFE(this)"><div><span class="fe-ht">⭐ CO-STAR 프레임워크</span></div><div class="fe-arr">▼</div></div>
+    <div class="fe-b"><div class="cb"><span class="kw">C</span>ontext / <span class="kw">O</span>bjective / <span class="kw">S</span>tyle
+<span class="kw">T</span>one / <span class="kw">A</span>udience / <span class="kw">R</span>esponse</div></div></div>
+
+    <div class="fe"><div class="fe-h" onclick="tFE(this)"><div><span class="fe-ht">🌹 ROSES 프레임워크</span></div><div class="fe-arr">▼</div></div>
+    <div class="fe-b"><div class="cb"><span class="kw">R</span>ole / <span class="kw">O</span>bjective / <span class="kw">S</span>cenario
+<span class="kw">E</span>xpected Solution / <span class="kw">S</span>teps</div></div></div>
+  </div>
+</div>
+
+<div id="sec-quiz" class="section">
+  <div class="sh"><h2>// QUIZ MODE</h2><p>배운 프롬프트 패턴을 테스트하세요. 틀리면 목숨이 줄어듭니다!</p></div>
+  <div class="panel">
+    <div id="quiz-start">
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-family:'Orbitron',monospace;font-size:32px;color:var(--neon);text-shadow:0 0 20px var(--glow);margin-bottom:16px;">🎮 QUIZ START</div>
+        <p style="color:var(--text-dim);font-size:14px;margin-bottom:24px;line-height:1.8;">총 10문제 · 5개 목숨 · 프롬프트 패턴 마스터 도전!</p>
+        <button class="qbtn" style="font-size:15px;padding:12px 32px;" onclick="startQuiz()">// START GAME</button>
+      </div>
+    </div>
+    <div id="quiz-play" style="display:none;">
+      <div class="quiz-header">
+        <div class="quiz-score">SCORE: <span id="qScore">0</span></div>
+        <div style="text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);">Q <span id="qNum">1</span>/10</div></div>
+        <div class="quiz-life" id="qLife">❤️❤️❤️❤️❤️</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="qProgress" style="width:0%"></div></div>
+      <div class="quiz-q" id="qQuestion"></div>
+      <div class="quiz-hint" id="qHint"></div>
+      <div class="quiz-opts" id="qOpts"></div>
+      <div class="quiz-feedback" id="qFeedback"></div>
+      <button class="quiz-next-btn" id="qNext" onclick="nextQ()">NEXT //</button>
+    </div>
+    <div id="quiz-result" style="display:none;" class="quiz-result">
+      <h2>// GAME OVER</h2>
+      <div class="final-score" id="finalScore" style="color:var(--neon);text-shadow:0 0 30px var(--glow);"></div>
+      <div class="rank-badge" id="rankBadge"></div>
+      <p id="rankMsg" style="color:var(--text-dim);margin-bottom:24px;font-size:14px;"></p>
+      <button class="qbtn" onclick="startQuiz()">// PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<div id="sec-analyzer" class="section">
+  <div class="sh"><h2>// QUALITY ANALYZER</h2><p>내 프롬프트를 OpenAI가 심층 분석합니다 — 점수·코멘트·개선안·히스토리 기록</p></div>
+
+  <div class="qa-layout">
+    <div class="panel" style="margin:0;">
+      <div class="panel-title">프롬프트 입력</div>
+      <textarea class="qa-textarea" id="qaInput" rows="10" placeholder="분석할 프롬프트를 입력하세요...
+
+예시:
+당신은 무역 전문가입니다.
+아래 품목의 HS Code를 분류하세요.
+결과는 JSON으로 반환하세요."></textarea>
+
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="bb c" style="flex:1;padding:10px;" onclick="analyzePrompt(false)">🔥 빠른 분석 (자체)</button>
+        <button class="bb g" style="flex:1;padding:10px;" onclick="analyzePrompt(true)">🤖 AI 심층 분석</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);margin-bottom:6px;letter-spacing:1px;">QUICK SAMPLES</div>
+        <div class="chip-row">
+          <div class="chip" onclick="loadSample('good')">✅ 우수 예시</div>
+          <div class="chip" onclick="loadSample('mid')">⚡ 보통 예시</div>
+          <div class="chip" onclick="loadSample('bad')">❌ 부실 예시</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);margin-bottom:8px;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;">
+          <span>// HISTORY</span>
+          <button onclick="clearHistory()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;">CLEAR</button>
+        </div>
+        <div id="historyList" style="max-height:180px;overflow-y:auto;"></div>
+        <div id="historyEmpty" style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;text-align:center;padding:12px;">// 분석 기록 없음</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel" style="margin:0;">
+        <div class="panel-title">분석 결과</div>
+
+        <div id="qa-loading" style="display:none;text-align:center;padding:24px;">
+          <div class="loading-line v" style="display:block;">AI ANALYZING</div>
+        </div>
+
+        <div id="qa-empty" style="text-align:center;padding:32px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2;">
+          // 프롬프트를 입력하고<br>분석 버튼을 누르세요
+        </div>
+
+        <div id="qa-result" style="display:none;">
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px;">
+            <div class="score-ring">
+              <svg class="ring-svg" width="120" height="120" viewBox="0 0 120 120">
+                <circle class="ring-bg" cx="60" cy="60" r="50"/>
+                <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"/>
+              </svg>
+              <div class="ring-text">
+                <div class="ring-num" id="ringNum">0</div>
+                <div class="ring-label">/ 100</div>
+              </div>
+            </div>
+            <div style="flex:1;min-width:160px;">
+              <div id="gradeLabel" style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;margin-bottom:10px;"></div>
+              <div class="criteria-list" id="criteriaList"></div>
+            </div>
+          </div>
+
+          <div id="aiCommentBox" style="display:none;margin-bottom:12px;padding:14px;border-radius:4px;border-left:3px solid var(--neon3);background:rgba(0,255,136,0.04);font-size:13px;line-height:1.8;color:var(--text);">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--neon3);letter-spacing:2px;margin-bottom:6px;">🤖 AI COMMENT</div>
+            <div id="aiCommentText"></div>
+          </div>
+
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">SUGGESTIONS</div>
+          <div class="suggestion-list" id="suggList"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="improvedPanel" style="margin:0;display:none;">
+        <div class="panel-title">✨ AI 개선 버전</div>
+        <div id="improvedLoading" style="display:none;text-align:center;padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon);">GENERATING IMPROVED VERSION...</div>
+        <div id="improvedText" style="font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;background:var(--input-bg);border:1px solid var(--border);border-radius:3px;padding:14px;"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="bb g" onclick="copyImproved()" style="flex:1;">COPY 개선본</button>
+          <button class="bb c" onclick="loadImproved()" style="flex:1;">빌더로 보내기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="sec-builder" class="section">
+  <div class="sh"><h2>// PROMPT BUILDER</h2><p>블록을 클릭해서 쌓으면 구조화된 프롬프트가 자동 완성됩니다.</p></div>
+  <div class="builder-layout">
+    <div class="builder-blocks">
+      <h3>// BLOCKS</h3>
+      <div class="block-item" data-key="role" data-label="#역할" onclick="addBlock(this)"><span class="block-icon">🎭</span>역할 (Role)</div>
+      <div class="block-item" data-key="task" data-label="#작업" onclick="addBlock(this)"><span class="block-icon">📋</span>작업 (Task)</div>
+      <div class="block-item" data-key="context" data-label="#맥락" onclick="addBlock(this)"><span class="block-icon">🌍</span>맥락 (Context)</div>
+      <div class="block-item" data-key="input" data-label="#입력" onclick="addBlock(this)"><span class="block-icon">📥</span>입력 (Input)</div>
+      <div class="block-item" data-key="constraint" data-label="#제약" onclick="addBlock(this)"><span class="block-icon">⛔</span>제약 (Constraint)</div>
+      <div class="block-item" data-key="output" data-label="#출력형식" onclick="addBlock(this)"><span class="block-icon">📤</span>출력 형식</div>
+      <div class="block-item" data-key="tone" data-label="#말투" onclick="addBlock(this)"><span class="block-icon">🗣️</span>말투 (Tone)</div>
+      <div class="block-item" data-key="example" data-label="#예시" onclick="addBlock(this)"><span class="block-icon">💡</span>예시 (Example)</div>
+      <div class="block-item" data-key="persona" data-label="#이용자정보" onclick="addBlock(this)"><span class="block-icon">👤</span>이용자 페르소나</div>
+      <div class="block-item" data-key="priority" data-label="#우선순위" onclick="addBlock(this)"><span class="block-icon">🔴</span>우선순위</div>
+      <hr style="border-color:var(--border);margin:10px 0;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);margin-bottom:6px;">TEMPLATES</div>
+      <div class="block-item" onclick="loadTemplate('persona')" style="border-color:rgba(255,0,170,0.3);color:var(--neon2);"><span class="block-icon">⚡</span>페르소나 템플릿</div>
+      <div class="block-item" onclick="loadTemplate('costar')" style="border-color:rgba(0,255,136,0.3);color:var(--neon3);"><span class="block-icon">⚡</span>CO-STAR 템플릿</div>
+    </div>
+    <div class="builder-canvas">
+      <div id="canvas-empty" class="canvas-empty">
+        <span style="font-size:24px;">🧩</span>
+        <span>왼쪽 블록을 클릭해서 추가하세요</span>
+      </div>
+      <div id="canvas-blocks"></div>
+      <div class="builder-btns">
+        <button class="bb c" onclick="previewPrompt()">// PREVIEW</button>
+        <button class="bb g" onclick="copyBuilderOutput()">COPY</button>
+        <button class="bb p" onclick="clearCanvas()">CLEAR</button>
+      </div>
+      <div id="builderOutput" class="builder-output" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<div id="sec-battle" class="section">
+  <div class="sh"><h2>// PROMPT BATTLE</h2><p>두 프롬프트를 OpenAI가 비교 분석해 어떤 쪽이 더 효과적인지 판정합니다.</p></div>
+  <div class="battle-layout">
+    <div class="battle-panel">
+      <div class="battle-label a">// CHALLENGER A</div>
+      <textarea class="battle-textarea" id="battleA" placeholder="첫 번째 프롬프트 입력..."></textarea>
+    </div>
+    <div class="battle-vs">
+      <div class="vs-text">VS</div>
+      <button class="battle-btn" id="battleBtn" onclick="doBattle()">⚔️ BATTLE</button>
+    </div>
+    <div class="battle-panel">
+      <div class="battle-label b">// CHALLENGER B</div>
+      <textarea class="battle-textarea" id="battleB" placeholder="두 번째 프롬프트 입력..."></textarea>
+    </div>
+  </div>
+
+  <div id="battle-loading" style="display:none;text-align:center;padding:30px;">
+    <div style="font-family:'Orbitron',monospace;color:var(--neon2);font-size:14px;letter-spacing:2px;animation:vsPulse 1s infinite;">⚔️ ANALYZING BATTLE...</div>
+  </div>
+
+  <div id="battle-result-area" style="display:none;" class="panel" style="margin-top:16px;">
+    <div class="panel-title">BATTLE RESULT</div>
+    <div class="battle-result" id="battleResult"></div>
+    <div id="battleAnalysis" style="margin-top:14px;font-size:13px;color:var(--text-dim);line-height:1.8;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;"></div>
+  </div>
+</div>
+
+<div id="sec-gen" class="section">
+  <div class="sh"><h2>// AI GENERATOR</h2><p>패턴·목표를 선택하면 OpenAI가 실무용 프롬프트를 즉시 생성합니다.</p></div>
+  <div class="gen-layout">
+    <div class="panel" style="margin:0;">
+      <div class="panel-title">설정</div>
+      <div class="form-g">
+        <label>패턴 선택</label>
+        <select id="patSel">
+          <option value="persona">🎭 페르소나 패턴</option>
+          <option value="multi">🧑‍🤝‍🧑 멀티 페르소나</option>
+          <option value="recipe">🟡 레시피 패턴</option>
+          <option value="alt">🔑 대안 접근법</option>
+          <option value="costar">⭐ CO-STAR</option>
+          <option value="roses">🌹 ROSES</option>
+          <option value="focus">🎯 FOCUS</option>
+          <option value="5w1h">📋 5W1H</option>
+          <option value="cog">📊 인지 검증자</option>
+          <option value="ref">🪞 리플렉션</option>
+          <option value="inv">🔄 뒤집힌 상호작용</option>
+        </select>
+      </div>
+      <div class="form-g">
+        <label>도메인</label>
+        <div class="chip-row">
+          <div class="chip selected" onclick="selChip(this,'dom')">무역/수출</div>
+          <div class="chip" onclick="selChip(this,'dom')">마케팅</div>
+          <div class="chip" onclick="selChip(this,'dom')">IT/개발</div>
+          <div class="chip" onclick="selChip(this,'dom')">법무</div>
+          <div class="chip" onclick="selChip(this,'dom')">교육</div>
+          <div class="chip" onclick="selChip(this,'dom')">금융</div>
+        </div>
+      </div>
+      <div class="form-g">
+        <label>목표/주제 <span style="color:var(--neon2)">*</span></label>
+        <textarea id="genGoal" rows="3" placeholder="예: 동남아 신규 바이어 발굴 이메일 작성"></textarea>
+      </div>
+      <div class="form-g">
+        <label>출력 언어</label>
+        <select id="genLang"><option>한국어</option><option>영어</option><option>한국어+영어</option></select>
+      </div>
+      <div class="form-g">
+        <label>추가 조건 (선택)</label>
+        <textarea id="genExtra" rows="2" placeholder="예: 500자 이내, 초보자 대상..."></textarea>
+      </div>
+      <button class="gen-btn" id="genBtn" onclick="doGenerate()">✨ GENERATE //</button>
+    </div>
+    <div class="panel" style="margin:0;">
+      <div class="panel-title">생성된 프롬프트</div>
+      <div class="loading-line" id="genLoading">GENERATING</div>
+      <div class="output-area" id="genOutput"><div class="output-ph">// WAITING FOR INPUT<br>← 설정 후 GENERATE 클릭</div></div>
+      <button class="copy-btn" id="genCopy" onclick="copyGen()" style="display:none;">📋 COPY</button>
+    </div>
+  </div>
+</div>
+
+</div><script>
+// ==========================================
+// 환경 변수 연동 (.env 파일 사용 환경)
+// ==========================================
+
+
+// PARTICLES
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W,H,pts=[];
+function resizeCanvas(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+for(let i=0;i<60;i++)pts.push({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*1.5+0.5});
+function animParticles(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,245,255,0.3)';ctx.fill();
+  });
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+// NAV
+function showSec(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  const map={home:0,ref:1,quiz:2,analyzer:3,builder:4,battle:5,gen:6};
+  document.querySelectorAll('.nav-btn')[map[id]]?.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// THEME TOGGLE
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('togKnob').textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+// Restore theme
+if(localStorage.getItem('theme')==='light'){
+  document.body.classList.add('light');
+  document.addEventListener('DOMContentLoaded',()=>{
+    const k=document.getElementById('togKnob');
+    if(k) k.textContent='☀️';
+  });
+}
+
+// EXPAND
+function tFE(h){
+  const b=h.nextElementSibling;
+  const o=b.classList.contains('open');
+  b.classList.toggle('open',!o);h.classList.toggle('open',!o);
+}
+
+// CHIP
+function selChip(c,grp){
+  c.closest('.chip-row').querySelectorAll('.chip').forEach(x=>x.classList.remove('selected'));
+  c.classList.add('selected');
+}
+
+// ======= QUIZ DATA =======
+const QS=[
+  {q:"다음 중 '서술형 프롬프트'의 특징으로 올바른 것은?",hint:"재사용성과 유연성을 생각해보세요",opts:["재사용성이 높고 유연성이 낮다","맥락 중심이며 유연성이 높다","규칙 중심이며 구조화된 출력을 유도한다","입출력을 명확히 정의한다"],ans:1,exp:"서술형은 맥락과 배경을 설명하여 AI가 상황을 이해하도록 유도합니다. 유연성이 높지만 재사용성은 낮은 것이 특징입니다."},
+  {q:"예시를 전혀 제공하지 않고 바로 지시하는 프롬프팅 방식은?",hint:"0개의 예시",opts:["원샷(One-shot)","퓨샷(Few-shot)","제로샷(Zero-shot)","멀티샷(Multi-shot)"],ans:2,exp:"제로샷(Zero-shot)은 예시 없이 바로 지시하는 방식입니다. AI가 훈련된 지식만으로 추론합니다."},
+  {q:"CO-STAR 프레임워크에서 'T'가 뜻하는 것은?",hint:"말투나 분위기와 관련",opts:["Task(작업)","Time(시간)","Tone(말투)","Target(대상)"],ans:2,exp:"CO-STAR에서 T는 Tone(말투/분위기)을 의미합니다. Context/Objective/Style/Tone/Audience/Response"},
+  {q:"페르소나 패턴의 '좋은 페르소나 4요소'에 해당하지 않는 것은?",hint:"페르소나 구성 핵심 4가지를 떠올려보세요",opts:["역할","경력/배경","월급/보수","말투/태도"],ans:2,exp:"좋은 페르소나 4요소는 [역할], [경력/배경], [전문분야], [말투/태도]입니다. 월급/보수는 포함되지 않습니다."},
+  {q:"리플렉션 패턴의 3단계 순서로 올바른 것은?",hint:"AI가 자기 성찰하는 과정",opts:["비평→초안→개선","초안→비평→개선","개선→초안→비평","초안→개선→비평"],ans:1,exp:"리플렉션 패턴: [초안] → [자기 비평] → [개선본] 순서로 진행됩니다."},
+  {q:"마크다운 프롬프트에서 '>' 기호의 역할은?",hint:"강조와 관련된 마크다운 문법",opts:["코드 블럭 생성","헤더(제목) 표시","절대 지켜야 할 조건 강조","목록 나열"],ans:2,exp:"> 기호(인용문)는 절대 지켜야 할 조건이나 중요한 맥락을 부각할 때 사용합니다."},
+  {q:"'뒤집힌 상호작용 패턴'의 핵심 특징은?",hint:"누가 먼저 질문을 하나요?",opts:["사용자가 예시를 먼저 제공","AI가 먼저 정보를 수집하고 결과 생성","AI가 여러 대안을 동시에 제시","사용자가 단계별 절차를 지정"],ans:1,exp:"뒤집힌 상호작용 패턴은 AI가 먼저 필요한 정보를 질문하고, 모든 정보가 수집된 후 결과를 생성합니다."},
+  {q:"인지 검증자 패턴의 목적은?",hint:"복잡한 질문을 어떻게 처리할까요?",opts:["예시를 여러 개 제공하여 패턴 학습","질문을 하위 질문으로 분해하여 단계적으로 검증","AI에게 특정 역할을 부여","출력 형식을 정확히 지정"],ans:1,exp:"인지 검증자 패턴: 복잡한 질문을 하위 질문으로 분해 → 각각 순서대로 검증 → 통합된 판단 도출"},
+  {q:"ROSES 프레임워크에서 'E'는 무엇을 의미하나요?",hint:"기대하는 결과물",opts:["Example(예시)","Expected Solution(기대 해결책)","Evaluation(평가)","Experience(경험)"],ans:1,exp:"ROSES에서 E는 Expected Solution(기대 해결책)을 의미합니다. Role/Objective/Scenario/Expected Solution/Steps"},
+  {q:"강도 표현 4단계 중 가장 강한 표현은?",hint:"최강의 강제성",opts:["가능하면 ~하는 편이 좋습니다","반드시, 꼭, 항상","절대로, 어떤 경우에도","~하세요, ~해주세요"],ans:2,exp:"강도 단계: 1단계(권장)→2단계(일반)→3단계(강조)→4단계(절대). '절대로, 어떤 경우에도'가 4단계(최강)입니다."},
+];
+
+let qIdx=0,qScore=0,qLives=5,qAnswered=false;
+
+function startQuiz(){
+  qIdx=0;qScore=0;qLives=5;qAnswered=false;
+  document.getElementById('quiz-start').style.display='none';
+  document.getElementById('quiz-result').style.display='none';
+  document.getElementById('quiz-play').style.display='block';
+  renderQ();
+}
+
+function renderQ(){
+  const q=QS[qIdx];
+  document.getElementById('qNum').textContent=qIdx+1;
+  document.getElementById('qScore').textContent=qScore;
+  document.getElementById('qProgress').style.width=((qIdx/10)*100)+'%';
+  document.getElementById('qLife').textContent='❤️'.repeat(qLives)+'🖤'.repeat(5-qLives);
+  document.getElementById('qQuestion').textContent=q.q;
+  document.getElementById('qHint').textContent='💡 힌트: '+q.hint;
+  const fb=document.getElementById('qFeedback');
+  fb.classList.remove('show','ok','fail');fb.textContent='';
+  document.getElementById('qNext').classList.remove('show');
+  qAnswered=false;
+  const opts=document.getElementById('qOpts');
+  opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-opt';btn.textContent=o;
+    btn.onclick=()=>answerQ(i,btn);
+    opts.appendChild(btn);
+  });
+}
+
+function answerQ(i,btn){
+  if(qAnswered)return;qAnswered=true;
+  const q=QS[qIdx];const correct=i===q.ans;
+  const fb=document.getElementById('qFeedback');
+  document.querySelectorAll('.quiz-opt').forEach((b,j)=>{
+    b.disabled=true;
+    if(j===q.ans)b.classList.add('correct');
+    else if(j===i&&!correct)b.classList.add('wrong');
+  });
+  if(correct){
+    qScore+=10;fb.className='quiz-feedback show ok';fb.textContent='✅ 정답! '+q.exp;
+  }else{
+    qLives--;fb.className='quiz-feedback show fail';fb.textContent='❌ 오답! '+q.exp;
+  }
+  document.getElementById('qLife').textContent='❤️'.repeat(Math.max(0,qLives))+'🖤'.repeat(5-Math.max(0,qLives));
+  document.getElementById('qNext').classList.add('show');
+  if(qLives<=0){document.getElementById('qNext').textContent='GAME OVER //';document.getElementById('qNext').onclick=showResult;}
+}
+
+function nextQ(){
+  qIdx++;
+  if(qIdx>=QS.length||qLives<=0)showResult();
+  else renderQ();
+}
+
+function showResult(){
+  document.getElementById('quiz-play').style.display='none';
+  document.getElementById('quiz-result').style.display='block';
+  document.getElementById('finalScore').textContent=qScore+'점';
+  const pct=qScore/100;
+  let rank,msg,c;
+  if(pct>=0.9){rank='S // 프롬프트 마스터';msg='완벽합니다! 당신은 진정한 프롬프트 엔지니어!';c='var(--neon)';}
+  else if(pct>=0.7){rank='A // 프롬프트 전문가';msg='훌륭합니다! 조금만 더 연습하면 마스터!';c='var(--neon3)';}
+  else if(pct>=0.5){rank='B // 프롬프트 학습자';msg='좋아요! 틀린 문제를 다시 복습해보세요.';c='var(--neon4)';}
+  else{rank='C // 더 열심히!';msg='레퍼런스를 다시 보고 도전해보세요!';c='var(--neon2)';}
+  const rb=document.getElementById('rankBadge');
+  rb.textContent=rank;rb.style.background=c;rb.style.color='#000';
+  document.getElementById('rankMsg').textContent=msg;
+  document.getElementById('finalScore').style.color=c;
+  document.getElementById('finalScore').style.textShadow='0 0 30px '+c;
+}
+
+// ======= ANALYZER =======
+const SAMPLES={
+  good:`#역할
+당신은 20년 경력의 무역 관세사입니다.
+FTA 협정세율과 원산지 규정의 전문가입니다.
+
+#작업
+아래 수출 품목의 한-아세안 FTA 적용 가능 여부를 분석하세요.
+
+품목명: 스테인리스 주방용품
+수출국: 한국 / 수입국: 베트남
+
+#분석 기준
+- 협정 세율 적용 여부
+- 원산지 결정 기준
+- 필요 서류 목록
+
+#제약 조건
+> 확실하지 않은 세율은 반드시 "세관 확인 필요"로 표기
+> 답변은 한국어로만
+
+#출력 형식
+{"FTA_적용": true/false, "협정세율": "", "필요서류": []}`,
+  mid:`당신은 무역 전문가입니다.
+HS code를 분류해주세요.
+품목: 면 티셔츠`,
+  bad:`hs코드 알려줘`
+};
+
+function loadSample(t){document.getElementById('qaInput').value=SAMPLES[t];}
+
+let analysisHistory = [];
+
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  if(!analysisHistory.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML = analysisHistory.slice().reverse().map((h,i)=>{
+    const col = h.score>=80?'var(--neon3)':h.score>=60?'var(--neon4)':'var(--neon2)';
+    return `<div onclick="loadHistoryItem(${analysisHistory.length-1-i})" style="padding:8px 10px;border:1px solid var(--border);border-radius:3px;margin-bottom:5px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--neon)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${col};min-width:32px;">${h.score}</div>
+      <div style="flex:1;overflow:hidden;">
+        <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${h.preview}</div>
+        <div style="font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${h.time} ${h.aiMode?'· AI':'· 자체'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadHistoryItem(i){
+  document.getElementById('qaInput').value = analysisHistory[i].prompt;
+}
+
+function clearHistory(){
+  analysisHistory=[];renderHistory();
+}
+
+async function analyzePrompt(aiMode){
+  const txt = document.getElementById('qaInput').value.trim();
+  if(!txt){document.getElementById('qaInput').focus();return;}
+
+  document.getElementById('qa-empty').style.display='none';
+  document.getElementById('qa-result').style.display='none';
+  document.getElementById('improvedPanel').style.display='none';
+  document.getElementById('qa-loading').style.display='block';
+
+  // --- local scoring ---
+  const criteria=[
+    {name:'명확성',max:20,score:scoreClarity(txt)},
+    {name:'구조화',max:20,score:scoreStructure(txt)},
+    {name:'구체성',max:20,score:scoreSpecificity(txt)},
+    {name:'제약조건',max:20,score:scoreConstraints(txt)},
+    {name:'출력정의',max:20,score:scoreOutput(txt)},
+  ];
+  const total=criteria.reduce((s,c)=>s+c.score,0);
+  const suggestions=generateSuggestions(txt,criteria);
+
+  let aiComment = null;
+  let improvedPrompt = null;
+
+  if(aiMode){
+    try{
+      const res = await fetch('/api/openai', {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini', 
+          response_format: { type: "json_object" }, 
+          messages: [{
+            role: 'user', 
+            content: `다음 프롬프트를 분석하고 JSON으로만 응답하세요.\n\n프롬프트:\n${txt}\n\n응답 형식 (반드시 JSON 형식을 지킬 것):\n{"comment":"이 프롬프트의 강점과 약점을 한국어로 2~3문장 코멘트","improved":"개선된 프롬프트 전체를 완성도 있게 작성 (마크다운 구조 사용)"}`
+          }]
+        })
+      });
+      const data = await res.json();
+      if(data.error) throw new Error(data.error.message);
+      
+      const raw = data.choices[0].message.content.trim();
+      const parsed = JSON.parse(raw);
+      
+      aiComment = parsed.comment;
+      improvedPrompt = parsed.improved;
+    }catch(e){
+      console.error(e);
+      aiComment = '⚠️ AI 분석 연결 오류. 자체 분석 결과만 표시합니다.';
+    }
+  }
+
+  document.getElementById('qa-loading').style.display='none';
+  document.getElementById('qa-result').style.display='block';
+
+  // Ring animation
+  const ring=document.getElementById('ringFill');
+  const num=document.getElementById('ringNum');
+  const circumference=314;
+  const offset=circumference-(total/100)*circumference;
+  const color=total>=80?'#00ff88':total>=60?'#ffaa00':'#ff00aa';
+  ring.style.stroke=color;
+  setTimeout(()=>{ring.style.strokeDashoffset=offset;},50);
+  let n=0;const timer=setInterval(()=>{n++;num.textContent=n;num.style.color=color;if(n>=total)clearInterval(timer);},15);
+
+  // Grade
+  const grades={90:'S — 마스터급',80:'A — 전문가',70:'B — 중급',60:'C — 입문',0:'D — 개선 필요'};
+  const grade = Object.entries(grades).reverse().find(([t])=>total>=parseInt(t));
+  document.getElementById('gradeLabel').innerHTML = `<span style="color:${color}">${grade?grade[1]:''}</span>`;
+
+  // Bars
+  const cl=document.getElementById('criteriaList');
+  cl.innerHTML='';
+  criteria.forEach(c=>{
+    const pct=(c.score/c.max)*100;
+    const bc=pct>=80?'#00ff88':pct>=60?'#ffaa00':'#ff00aa';
+    cl.innerHTML+=`<div class="crit-row">
+      <div class="crit-name">${c.name}</div>
+      <div class="crit-bar"><div class="crit-fill" style="width:0%;background:${bc}" data-w="${pct}"></div></div>
+      <div class="crit-val">${c.score}</div>
+    </div>`;
+  });
+  setTimeout(()=>{document.querySelectorAll('.crit-fill').forEach(f=>{f.style.width=f.dataset.w+'%';});},100);
+
+  // AI Comment
+  const acBox = document.getElementById('aiCommentBox');
+  const acText = document.getElementById('aiCommentText');
+  if(aiComment){
+    acBox.style.display='block';
+    acText.textContent = aiComment;
+    // color by sentiment
+    const hasError = aiComment.includes('오류');
+    acBox.style.borderLeftColor = hasError ? 'var(--neon2)' : 'var(--neon3)';
+    acBox.style.background = hasError ? 'rgba(255,0,170,0.04)' : 'rgba(0,255,136,0.04)';
+  } else {
+    acBox.style.display='none';
+  }
+
+  // Suggestions
+  const sl=document.getElementById('suggList');
+  sl.innerHTML=suggestions.map(s=>`<div class="sug-item ${s.level}">${s.text}</div>`).join('');
+
+  // Improved panel
+  if(improvedPrompt){
+    document.getElementById('improvedPanel').style.display='block';
+    document.getElementById('improvedText').textContent = improvedPrompt;
+    window._improvedPrompt = improvedPrompt;
+  }
+
+  // Save to history
+  analysisHistory.push({
+    score: total, prompt: txt,
+    preview: txt.substring(0,60).replace(/\n/g,' ')+'…',
+    time: new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+    aiMode
+  });
+  if(analysisHistory.length>10) analysisHistory.shift();
+  renderHistory();
+}
+
+function copyImproved(){
+  const t = window._improvedPrompt || '';
+  navigator.clipboard.writeText(t).then(()=>{
+    const btn = document.querySelector('#improvedPanel .bb.g');
+    const orig = btn.textContent;
+    btn.textContent='✅ COPIED!';
+    setTimeout(()=>btn.textContent=orig, 2000);
+  });
+}
+
+function loadImproved(){
+  if(!window._improvedPrompt) return;
+  // Clear builder and send to builder input as role block
+  clearCanvas();
+  showSec('builder');
+  setTimeout(()=>{
+    // Add as a freeform role block with content
+    const canvas=document.getElementById('canvas-blocks');
+    document.getElementById('canvas-empty').style.display='none';
+    const div=document.createElement('div');
+    div.className='dropped-block';div.dataset.key='role';div.dataset.label='#개선본';
+    div.innerHTML=`<div class="block-label">#개선본</div>
+      <textarea style="flex:1;background:transparent;border:none;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:12px;outline:none;resize:none;line-height:1.7;min-height:120px;">${window._improvedPrompt}</textarea>
+      <button class="del-block" onclick="this.parentElement.remove();checkEmpty();previewPrompt();">×</button>`;
+    canvas.appendChild(div);
+    div.querySelector('textarea').addEventListener('input',previewPrompt);
+    previewPrompt();
+  },300);
+}
+
+function scoreClarity(t){
+  let s=8;
+  if(t.length>50)s+=4;
+  if(t.includes('당신은')||t.includes('You are'))s+=4;
+  if(t.length>200)s+=4;
+  return Math.min(20,s);
+}
+function scoreStructure(t){
+  let s=0;
+  if(t.includes('#'))s+=6;
+  if(t.includes('```')||t.includes("'''"))s+=4;
+  if(t.includes('\n'))s+=4;
+  if(t.includes('>')&&t.includes('#'))s+=6;
+  return Math.min(20,s);
+}
+function scoreSpecificity(t){
+  let s=4;
+  const kws=['반드시','구체적','예시','예:','형식','단계','절차'];
+  kws.forEach(k=>{if(t.includes(k))s+=2;});
+  return Math.min(20,s);
+}
+function scoreConstraints(t){
+  let s=0;
+  if(t.includes('>'))s+=6;
+  if(t.includes('반드시')||t.includes('절대'))s+=4;
+  if(t.includes('이내')||t.includes('자 이내')||t.includes('줄 이내'))s+=5;
+  if(t.includes('제약')||t.includes('constraint'))s+=5;
+  return Math.min(20,s);
+}
+function scoreOutput(t){
+  let s=0;
+  if(t.includes('json')||t.includes('JSON'))s+=8;
+  if(t.includes('출력')||t.includes('형식'))s+=6;
+  if(t.includes('{')||t.includes('['))s+=6;
+  return Math.min(20,s);
+}
+function generateSuggestions(t,criteria){
+  const sugs=[];
+  if(criteria[0].score<14)sugs.push({level:'sug-high',text:'🔴 역할(페르소나)이 불명확합니다. "당신은 ~전문가입니다"로 시작하세요.'});
+  if(criteria[1].score<12)sugs.push({level:'sug-high',text:'🔴 구조화가 부족합니다. #역할 #작업 #출력 헤더를 사용하세요.'});
+  if(criteria[2].score<12)sugs.push({level:'sug-mid',text:'🟡 구체성을 높이세요. 예시(퓨샷)나 구체적 조건을 추가하면 좋습니다.'});
+  if(criteria[3].score<12)sugs.push({level:'sug-mid',text:'🟡 제약 조건이 없습니다. "> 반드시 ~하세요" 형식으로 핵심 규칙을 지정하세요.'});
+  if(criteria[4].score<12)sugs.push({level:'sug-mid',text:'🟡 출력 형식이 정의되지 않았습니다. JSON 또는 특정 형식을 지정하세요.'});
+  const total=criteria.reduce((s,c)=>s+c.score,0);
+  if(total>=80)sugs.push({level:'sug-low',text:'🟢 전반적으로 우수한 프롬프트입니다! 실무에 바로 사용 가능합니다.'});
+  if(sugs.length===0)sugs.push({level:'sug-low',text:'🟢 좋습니다! 퓨샷 예시를 추가하면 더욱 정확한 결과를 얻을 수 있습니다.'});
+  return sugs;
+}
+
+// ======= BUILDER =======
+const blockDefaults={
+  role:'20년 경력의 무역 전문가입니다.\nFTA 협정세율과 원산지 규정의 전문가입니다.',
+  task:'아래 수출 품목의 FTA 적용 가능 여부를 분석하세요.',
+  context:'중소기업 무역팀 담당자가 처음으로 FTA를 활용하려는 상황입니다.',
+  input:'품목명: {product_name}\n수출국: 한국\n수입국: {country}',
+  constraint:'- 답변은 500자 이내\n- 확실하지 않은 세율은 "세관 확인 필요"로 표기',
+  output:'JSON 형식으로 반환:\n{"FTA_적용": true/false, "협정세율": "", "필요서류": []}',
+  tone:'쉽고 실용적인 언어로, 전문 용어 사용 시 괄호 안에 설명 추가',
+  example:'입력: "면 티셔츠" → 출력: {"FTA_적용": true, "협정세율": "0%"}',
+  persona:'직책: 중소기업 무역팀장\n경력: 해외영업 3년\n수준: FTA 초보',
+  priority:'🔴 개인정보 절대 출력 금지\n🟡 500자 이내 답변\n🟢 가능하면 실제 사례 포함'
+};
+
+function addBlock(item){
+  const key=item.dataset.key;
+  const label=item.dataset.label;
+  const canvas=document.getElementById('canvas-blocks');
+  const empty=document.getElementById('canvas-empty');
+  empty.style.display='none';
+  const div=document.createElement('div');
+  div.className='dropped-block';div.dataset.key=key;div.dataset.label=label;
+  div.innerHTML=`<div class="block-label">${label}</div>
+    <textarea onchange="previewPrompt()">${blockDefaults[key]||''}</textarea>
+    <button class="del-block" onclick="this.parentElement.remove();checkEmpty();previewPrompt();">×</button>`;
+  canvas.appendChild(div);
+  div.querySelector('textarea').addEventListener('input',previewPrompt);
+}
+
+function checkEmpty(){
+  const canvas=document.getElementById('canvas-blocks');
+  document.getElementById('canvas-empty').style.display=canvas.children.length?'none':'flex';
+}
+
+function loadTemplate(t){
+  clearCanvas();
+  if(t==='persona'){
+    ['role','task','input','constraint','output'].forEach(k=>{
+      const el=document.querySelector(`[data-key="${k}"]`);
+      if(el)addBlock(el);
+    });
+  }else if(t==='costar'){
+    ['context','task','tone','persona','constraint','output'].forEach(k=>{
+      const el=document.querySelector(`[data-key="${k}"]`);
+      if(el)addBlock(el);
+    });
+  }
+}
+
+function clearCanvas(){
+  document.getElementById('canvas-blocks').innerHTML='';
+  document.getElementById('canvas-empty').style.display='flex';
+  document.getElementById('builderOutput').style.display='none';
+}
+
+function previewPrompt(){
+  const blocks=document.querySelectorAll('.dropped-block');
+  if(!blocks.length)return;
+  let out='';
+  blocks.forEach(b=>{
+    const label=b.dataset.label;
+    const val=b.querySelector('textarea').value.trim();
+    out+=label+'\n'+val+'\n\n';
+  });
+  const output=document.getElementById('builderOutput');
+  output.style.display='block';
+  output.textContent=out.trim();
+}
+
+function copyBuilderOutput(){
+  previewPrompt();
+  const t=document.getElementById('builderOutput').textContent;
+  if(!t)return;
+  navigator.clipboard.writeText(t).then(()=>{
+    const btn=document.querySelector('.builder-btns .bb.g');
+    btn.textContent='COPIED!';btn.style.color='var(--neon3)';
+    setTimeout(()=>{btn.textContent='COPY';btn.style.color='';},2000);
+  });
+}
+
+// ======= BATTLE =======
+async function doBattle(){
+  const a=document.getElementById('battleA').value.trim();
+  const b=document.getElementById('battleB').value.trim();
+  if(!a||!b){alert('두 프롬프트를 모두 입력하세요!');return;}
+  document.getElementById('battleBtn').disabled=true;
+  document.getElementById('battle-loading').style.display='block';
+  document.getElementById('battle-result-area').style.display='none';
+
+  try{
+    const res = await fetch('/api/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        response_format: { type: "json_object" },
+        messages: [{
+          role: 'user', 
+          content: `두 프롬프트를 비교 분석하고 반드시 JSON으로만 응답하세요.\n\n프롬프트 A:\n${a}\n\n프롬프트 B:\n${b}\n\n응답 형식 (이 형식만 출력):\n{"winner":"A 또는 B","a_score":0~100,"b_score":0~100,"a_summary":"A의 강점 한 문장","b_summary":"B의 강점 한 문장","analysis":"두 프롬프트 비교 분석 2~3문장","reason":"승자가 이긴 이유 한 문장"}`
+        }]
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+
+    const text = data.choices[0].message.content.trim();
+    const parsed = JSON.parse(text);
+    
+    showBattleResult(parsed, a, b);
+  }catch(e){
+    document.getElementById('battle-result-area').style.display='block';
+    document.getElementById('battleResult').innerHTML=`<div style="color:var(--neon2);font-family:'JetBrains Mono',monospace;font-size:12px;grid-column:1/-1;padding:20px;">⚠️ 분석 중 오류: ${e.message}</div>`;
+  }finally{
+    document.getElementById('battleBtn').disabled=false;
+    document.getElementById('battle-loading').style.display='none';
+  }
+}
+
+function showBattleResult(r,a,b){
+  const area=document.getElementById('battle-result-area');
+  area.style.display='block';
+  const br=document.getElementById('battleResult');
+  const aWin=r.winner==='A';
+  br.innerHTML=`
+    <div class="battle-res-card ${aWin?'winner':''}">
+      ${aWin?'<div class="winner-badge">👑 WINNER</div>':''}
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--neon);margin-bottom:8px;">CHALLENGER A</div>
+      <div class="battle-meter"><div class="meter-fill" style="width:${r.a_score}%;background:${aWin?'var(--neon)':'var(--text-muted)'}"></div></div>
+      <div style="font-family:'Orbitron',monospace;font-size:20px;color:${aWin?'var(--neon)':'var(--text-dim)'};margin:4px 0;">${r.a_score}<span style="font-size:11px;">/100</span></div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.6;">${r.a_summary||''}</div>
+    </div>
+    <div class="battle-res-card ${!aWin?'winner':''}">
+      ${!aWin?'<div class="winner-badge">👑 WINNER</div>':''}
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--neon2);margin-bottom:8px;">CHALLENGER B</div>
+      <div class="battle-meter"><div class="meter-fill" style="width:${r.b_score}%;background:${!aWin?'var(--neon2)':'var(--text-muted)'}"></div></div>
+      <div style="font-family:'Orbitron',monospace;font-size:20px;color:${!aWin?'var(--neon2)':'var(--text-dim)'};margin:4px 0;">${r.b_score}<span style="font-size:11px;">/100</span></div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.6;">${r.b_summary||''}</div>
+    </div>`;
+  document.getElementById('battleAnalysis').innerHTML=`<span style="color:var(--neon4);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;">// ANALYSIS</span><br><br>${r.analysis||''}<br><br><strong style="color:var(--neon);">승리 이유:</strong> ${r.reason||''}`;
+}
+
+// ======= GENERATOR =======
+async function doGenerate(){
+  const pattern=document.getElementById('patSel').value;
+  const goal=document.getElementById('genGoal').value.trim();
+  const lang=document.getElementById('genLang').value;
+  const extra=document.getElementById('genExtra').value.trim();
+  const dom=document.querySelector('#sec-gen .chip.selected')?.textContent||'무역/수출';
+  if(!goal){document.getElementById('genGoal').focus();return;}
+
+  const pmap={
+    persona:'페르소나 패턴 (역할+경력+전문분야+말투 4요소)',
+    multi:'멀티 페르소나 패턴 (3명의 다른 관점 전문가)',
+    recipe:'레시피 패턴 (STEP, 할일, 소요시간, 완료기준, 주의사항)',
+    alt:'대안 접근법 패턴 (최소 4가지, 장단점 비교)',
+    costar:'CO-STAR (Context/Objective/Style/Tone/Audience/Response)',
+    roses:'ROSES (Role/Objective/Scenario/Expected Solution/Steps)',
+    focus:'FOCUS (Function/Objective/Context/Utility/Specifications)',
+    '5w1h':'5W1H (Who/What/When/Where/Why/How)',
+    cog:'인지 검증자 패턴 (하위 질문 3~5개 도출 후 검증)',
+    ref:'리플렉션 패턴 (초안→자기비평→개선본)',
+    inv:'뒤집힌 상호작용 (AI가 먼저 질문, 정보 수집 후 생성)'
+  };
+
+  document.getElementById('genBtn').disabled=true;
+  document.getElementById('genLoading').classList.add('v');
+  document.getElementById('genOutput').innerHTML='';
+  document.getElementById('genCopy').style.display='none';
+
+  try{
+    const res = await fetch('/api/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o', // 생성 작업은 퀄리티가 중요하므로 gpt-4o 사용
+        messages: [
+          { role: 'system', content: '당신은 프롬프트 엔지니어링 전문가입니다. 요청한 패턴에 맞는 실무용 프롬프트를 생성하세요. 마크다운 구조를 활용하여 완성도 있게 작성하세요.' },
+          { role: 'user', content: `패턴: ${pmap[pattern]}\n도메인: ${dom}\n목표: ${goal}\n출력언어: ${lang}${extra?'\n추가조건: '+extra:''}\n\n위 조건에 맞는 실무용 프롬프트를 작성해주세요.` }
+        ]
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+
+    const text = data.choices[0].message.content || '오류가 발생했습니다.';
+    
+    document.getElementById('genOutput').textContent = text;
+    document.getElementById('genCopy').style.display = 'block';
+  }catch(e){
+    document.getElementById('genOutput').textContent = '⚠️ 오류: ' + e.message;
+  }finally{
+    document.getElementById('genBtn').disabled=false;
+    document.getElementById('genLoading').classList.remove('v');
+  }
+}
+
+function copyGen(){
+  const t=document.getElementById('genOutput').textContent;
+  navigator.clipboard.writeText(t).then(()=>{
+    const btn=document.getElementById('genCopy');
+    btn.textContent='✅ COPIED!';
+    setTimeout(()=>{btn.textContent='📋 COPY';},2000);
+  });
+}
+</script>
+</body>
+</html>
